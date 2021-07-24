@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
+use Auth;
 
 class TaskResource extends JsonResource
 {
@@ -24,6 +25,8 @@ class TaskResource extends JsonResource
         };
 
         return [
+            'user_id' => $this->user_id,
+            'id' => $this->id,
             'id' => $this->id,
             'task_name' => $this->task_name,
             'task_level' => $this->task_level,
@@ -31,8 +34,7 @@ class TaskResource extends JsonResource
             'start_date' => Carbon::parse($this->start_date)->format('Y-m-d'),
             'end_date' => Carbon::parse($this->end_date)->format('Y-m-d'),
             'file_name' => $this->file_name,
-            'expired' => $days ,
-            
+            'expired' => $days ,            
         ]; 
     }
 }

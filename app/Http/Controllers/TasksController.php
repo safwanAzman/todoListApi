@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Tasks;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\TaskResource;
 use Carbon\Carbon;
+use Auth;
 
 class TasksController extends Controller
 {
@@ -16,13 +18,42 @@ class TasksController extends Controller
      * @return \Illuminate\Http\Response
      */
 
+
+    public function profile()
+    {
+        $user = Auth::user();
+        return response()->json(['user' => $user]);
+    }
+
+    public function tasksTodo()
+    {
+        $status = "not_complete";
+        $tasks = Tasks::where('status', $status)
+        ->where('user_id',Auth::user()->id)
+        ->orderBy('id', 'DESC')
+        ->get();
+        return response()->json(['tasks' => TaskResource::collection($tasks)]);
+    }
+
+    public function tasksComplete()
+    {
+        $status = "complete";
+        $tasks = Tasks::where('status', $status)
+        ->where('user_id',Auth::user()->id)
+        ->orderBy('id', 'DESC')
+        ->get();
+        return response()->json(['tasks' => TaskResource::collection($tasks)]);
+    }
+
     public function index()
     {
         $now = Carbon::now();
-        $tasks = Tasks::whereDate('start_date',$now)->get();
+        $tasks = Tasks::whereDate('start_date',$now)
+        ->where('user_id',Auth::user()->id)
+        ->orderBy('id', 'DESC')
+        ->get();
         return response()->json(['tasks' => TaskResource::collection($tasks)]);
     }
-    
 
     public function tasksWeek()
     {
@@ -30,7 +61,10 @@ class TasksController extends Controller
         $from = $now->startOfWeek()->format('Y-m-d');
         $to =   $now->endOfWeek()->format('Y-m-d');
 
-        $tasks = Tasks::whereBetween('start_date', [$from,$to])->get();
+        $tasks = Tasks::whereBetween('start_date', [$from,$to])
+        ->where('user_id',Auth::user()->id)
+        ->orderBy('id', 'DESC')
+        ->get();
 
         return response()->json(['tasks' => TaskResource::collection($tasks)]);
     }
@@ -42,7 +76,10 @@ class TasksController extends Controller
         $from = $now->startOfMonth()->format('Y-m-d');
         $to =   $now->endOfMonth()->format('Y-m-d');
 
-        $tasks = Tasks::whereBetween('start_date', [$from,$to])->get();
+        $tasks = Tasks::whereBetween('start_date', [$from,$to])
+        ->where('user_id',Auth::user()->id)
+        ->orderBy('id', 'DESC')
+        ->get();
 
         return response()->json(['tasks' => TaskResource::collection($tasks)]);
     }
@@ -55,7 +92,7 @@ class TasksController extends Controller
      */
     public function create(Request $request)
     {
-        $validation = $this->validate($request, [
+        $validator = Validator::make($request->all(),[
             'task_name' => 'required|max:255',
             'task_level' => 'required',
             'start_date' => 'required',
@@ -70,16 +107,24 @@ class TasksController extends Controller
             $filepath = $request->file('file_name')->store('public');
             $file_name = str_replace('public/', '', $filepath);
         }
+
+
+
         $tasks = Tasks::create([
-            'user_id' => '1',
+            'user_id' => Auth::user()->id,
             'task_name' => $request->task_name,
             'task_level' => $request->task_level,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'file_name' => $file_name,
         ]);
-        return response()->json([ "code" => 200, "message" => "added successfully" , "data" =>$tasks->refresh() ]);
-
+        return response()->json([ 
+            "code" => 200, 
+            "message" => 
+            "added successfully" , 
+            "data" =>$tasks->refresh() 
+        ]);
+        
     }
 
     /**
@@ -146,7 +191,7 @@ class TasksController extends Controller
 
         $tasks->update([
 
-            'user_id' => '1',
+            'user_id' => Auth::user()->id,
             'task_name' => $request->task_name,
             'task_level' => $request->task_level,
             'start_date' => $request->start_date,
