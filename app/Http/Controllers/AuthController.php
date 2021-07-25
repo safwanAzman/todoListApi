@@ -105,7 +105,8 @@ class AuthController extends Controller
             $social = Social::where("user_id",$user->id)->first();
             if($social){ 
                 $token =$user->createToken($user->id.'_Token')->plainTextToken;
-                $url = 'http://127.0.0.1:3000/authenticate?auth_token='.$token.'';
+                $url = env('AUTH_URL').'/authenticate?auth_token='.$token.'';
+               
                 // redirect ke react dengan parameter token
                 // dekat page yg kau redirect ni , kau aksess pareamter , save parameter local storgae
                 return redirect()->away($url);
@@ -134,7 +135,7 @@ class AuthController extends Controller
             // save dalam provider
 
             $token =$user->createToken($user->id.'_Token')->plainTextToken;
-            $url = 'http://127.0.0.1:3000/authenticate?auth_token='.$token.'';
+            $url = env('AUTH_URL').'/authenticate?auth_token='.$token.'';
 
             return redirect()->away($url);
         }
